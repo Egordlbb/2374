@@ -1,0 +1,33 @@
+from telegram.ext import Updater, MessageHandler, Filters
+from PIL import Image
+import os
+a='6096080182:AAGsmfq96osycS18VzmiaGain1KEQrS4OZM'
+
+def start(update, context):
+    context.bot.send_message(chat_id=update.effective_chat.id, text="Привет! Пришли мне картинку, и я сделаю из нее стикер.")
+
+def make_sticker(update, context):
+    # получаем объект картинки
+    file = context.bot.getFile(update.message.photo[-1].file_id)
+    image = Image.open(file.download_as_bytearray())
+
+    # создаем стикер
+    sticker_file = os.path.splitext(file.file_path)[0] + ".webp"
+    image.save(sticker_file, "webp")
+    context.bot.send_sticker(chat_id=update.effective_chat.id, sticker=open(sticker_file, "rb"))
+
+def main():
+    updater = Updater(token="YOUR_TOKEN", use_context=True)
+    dispatcher = updater.dispatcher
+
+    start_handler = MessageHandler(Filters.regex('^/(start|help)'), start)
+    dispatcher.add_handler(start_handler)
+
+    sticker_handler = MessageHandler(Filters.photo, make_sticker)
+    dispatcher.add_handler(sticker_handler)
+
+    updater.start_polling()
+    updater.idle()
+
+if __name__ == '__main__':
+    main()
